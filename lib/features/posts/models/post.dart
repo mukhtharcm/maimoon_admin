@@ -1,4 +1,5 @@
 import 'package:pocketbase/pocketbase.dart';
+import 'package:maimoon_admin/core/di/service_locator.dart';
 
 class Post {
   final String id;
@@ -20,6 +21,7 @@ class Post {
   });
 
   factory Post.fromRecord(RecordModel record) {
+    final pb = getIt<PocketBase>();
     return Post(
       id: record.id,
       title: record.data['title'] ?? '',
@@ -28,8 +30,14 @@ class Post {
       date: record.data['date'] != null
           ? DateTime.parse(record.data['date'])
           : null,
-      coverUrl: record.data['cover'],
-      imageUrls: List<String>.from(record.data['images'] ?? []),
+      coverUrl: record.data['cover'] != null
+          ? pb.files.getUrl(record, record.data['cover']).toString()
+          : null,
+      imageUrls: List<String>.from(record.data['images'] ?? [])
+          .map(
+            (filename) => pb.files.getUrl(record, filename).toString(),
+          )
+          .toList(),
     );
   }
 

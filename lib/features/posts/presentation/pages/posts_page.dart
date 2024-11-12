@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/posts/models/post.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 // import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
+
 import 'package:go_router/go_router.dart';
+import 'package:maimoon_admin/features/series/models/series.dart';
 
 class PostsPage extends StatefulWidget {
   const PostsPage({super.key});
@@ -27,6 +27,8 @@ class _PostsPageState extends State<PostsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -35,10 +37,12 @@ class _PostsPageState extends State<PostsPage> {
         ),
         title: const Text('Posts'),
         actions: [
-          IconButton(
+          FilledButton.icon(
+            onPressed: () => context.go('/posts/new'),
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddEditPostDialog(context),
+            label: const Text('New Post'),
           ),
+          const SizedBox(width: 16),
         ],
       ),
       body: BlocBuilder<PostsBloc, PostsState>(
@@ -50,228 +54,42 @@ class _PostsPageState extends State<PostsPage> {
             return Center(child: Text('Error: ${state.message}'));
           }
           if (state is PostsLoaded) {
+            if (state.posts.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No posts yet',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () => context.go('/posts/new'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create your first post'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             return ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: state.posts.length,
               itemBuilder: (context, index) {
                 final post = state.posts[index];
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    leading: post.coverUrl != null
-                        ? Image.network(
-                            post.coverUrl!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          )
-                        : const Icon(Icons.article),
-                    title: Text(post.title),
-                    subtitle: Text(
-                      post.date != null
-                          ? DateFormat.yMMMd().format(post.date!)
-                          : 'No date',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _showAddEditPostDialog(
-                            context,
-                            post: post,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () => _confirmDelete(context, post),
-                        ),
-                      ],
-                    ),
-                  ),
+                return _PostCard(
+                  post: post,
+                  onEdit: () =>
+                      context.go('/posts/edit/${post.id}', extra: post),
+                  onDelete: () => _confirmDelete(context, post),
                 );
               },
             );
           }
           return const Center(child: Text('No posts found'));
         },
-      ),
-    );
-  }
-
-  Future<void> _showAddEditPostDialog(BuildContext context,
-      {Post? post}) async {
-    final titleController = TextEditingController(text: post?.title ?? '');
-    final quillController = QuillController(
-      document: post?.content.isNotEmpty == true
-          ? Document.fromJson(post!.content as List)
-          : Document(),
-      selection: const TextSelection.collapsed(offset: 0),
-    );
-    String? selectedSeriesId = post?.seriesId;
-    DateTime selectedDate = post?.date ?? DateTime.now();
-    String? coverImagePath;
-    List<String> additionalImagePaths = [];
-
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(post == null ? 'Add Post' : 'Edit Post'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
-              ),
-              const SizedBox(height: 16),
-              BlocBuilder<SeriesBloc, SeriesState>(
-                builder: (context, state) {
-                  if (state is SeriesLoaded) {
-                    return DropdownButtonFormField<String>(
-                      value: selectedSeriesId,
-                      decoration: const InputDecoration(labelText: 'Series'),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('No Series'),
-                        ),
-                        ...state.seriesList.map(
-                          (series) => DropdownMenuItem(
-                            value: series.id,
-                            child: Text(series.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) => selectedSeriesId = value,
-                    );
-                  }
-                  return const CircularProgressIndicator();
-                },
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: Text(
-                  'Date: ${DateFormat.yMMMd().format(selectedDate)}',
-                ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null) {
-                    setState(() {
-                      selectedDate = date;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.image),
-                label: const Text('Add Cover Image'),
-                onPressed: () async {
-                  final image = await ImagePicker()
-                      .pickImage(source: ImageSource.gallery);
-                  if (image != null) {
-                    coverImagePath = image.path;
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 300,
-                child: Column(
-                  children: [
-                    QuillToolbar.simple(
-                      configurations: QuillSimpleToolbarConfigurations(
-                        controller: quillController,
-                        showDividers: false,
-                        showFontFamily: false,
-                        showFontSize: false,
-                        showBoldButton: true,
-                        showItalicButton: true,
-                        showSmallButton: false,
-                        showUnderLineButton: true,
-                        showStrikeThrough: false,
-                        showInlineCode: false,
-                        showColorButton: false,
-                        showBackgroundColorButton: false,
-                        showClearFormat: true,
-                        showAlignmentButtons: true,
-                        showLeftAlignment: true,
-                        showCenterAlignment: true,
-                        showRightAlignment: true,
-                        showJustifyAlignment: true,
-                        showHeaderStyle: false,
-                        showListNumbers: true,
-                        showListBullets: true,
-                        showListCheck: false,
-                        showCodeBlock: false,
-                        showQuote: true,
-                        showIndent: true,
-                        showLink: true,
-                        showUndo: true,
-                        showRedo: true,
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: QuillEditor.basic(
-                          configurations: QuillEditorConfigurations(
-                            controller: quillController,
-                            // readOnly: false,
-                            sharedConfigurations:
-                                const QuillSharedConfigurations(
-                              locale: Locale('en'),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (titleController.text.isNotEmpty) {
-                final newPost = Post(
-                  id: post?.id ?? '',
-                  title: titleController.text,
-                  content:
-                      jsonEncode(quillController.document.toDelta().toJson()),
-                  seriesId: selectedSeriesId,
-                  date: selectedDate,
-                  coverUrl: coverImagePath ?? post?.coverUrl,
-                  imageUrls: additionalImagePaths,
-                );
-
-                if (post == null) {
-                  context.read<PostsBloc>().add(CreatePost(newPost));
-                } else {
-                  context.read<PostsBloc>().add(UpdatePost(post.id, newPost));
-                }
-                Navigator.pop(context);
-              }
-            },
-            child: Text(post == null ? 'Add' : 'Save'),
-          ),
-        ],
       ),
     );
   }
@@ -287,10 +105,10 @@ class _PostsPageState extends State<PostsPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.withOpacity(0.1),
+              foregroundColor: Colors.red,
             ),
             onPressed: () {
               context.read<PostsBloc>().add(DeletePost(post.id));
@@ -299,6 +117,129 @@ class _PostsPageState extends State<PostsPage> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PostCard extends StatelessWidget {
+  final Post post;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _PostCard({
+    required this.post,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: onEdit,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (post.coverUrl != null) ...[
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.network(
+                  post.coverUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          post.title,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      ),
+                      IconButton.outlined(
+                        icon: const Icon(Icons.edit),
+                        onPressed: onEdit,
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.outlined(
+                        icon: const Icon(Icons.delete),
+                        onPressed: onDelete,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        post.date != null
+                            ? DateFormat.yMMMd().format(post.date!)
+                            : 'No date',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (post.seriesId != null) ...[
+                        const SizedBox(width: 16),
+                        Icon(
+                          Icons.library_books,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        BlocBuilder<SeriesBloc, SeriesState>(
+                          builder: (context, state) {
+                            if (state is SeriesLoaded) {
+                              final series = state.seriesList.firstWhere(
+                                (s) => s.id == post.seriesId,
+                                orElse: () =>
+                                    Series(id: '', name: 'Unknown Series'),
+                              );
+                              return Text(
+                                series.name,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

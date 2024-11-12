@@ -5,6 +5,8 @@ import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
 import 'package:maimoon_admin/features/home/presentation/pages/home_page.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
 import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
+import 'package:maimoon_admin/features/posts/models/post.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -32,6 +34,17 @@ final router = GoRouter(
     GoRoute(
       path: '/posts',
       builder: (context, state) => const PostsPage(),
+    ),
+    GoRoute(
+      path: '/posts/new',
+      builder: (context, state) => const PostFormPage(),
+    ),
+    GoRoute(
+      path: '/posts/edit/:id',
+      builder: (context, state) {
+        final post = (state.extra as Post);
+        return PostFormPage(post: post);
+      },
     ),
     GoRoute(
       path: '/series',
