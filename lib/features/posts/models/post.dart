@@ -9,6 +9,7 @@ class Post {
   final DateTime? date;
   final String? coverUrl;
   final List<String> imageUrls;
+  final int order;
 
   Post({
     required this.id,
@@ -18,6 +19,7 @@ class Post {
     this.date,
     this.coverUrl,
     this.imageUrls = const [],
+    this.order = 0,
   });
 
   factory Post.fromRecord(RecordModel record) {
@@ -38,6 +40,7 @@ class Post {
             (filename) => pb.files.getUrl(record, filename).toString(),
           )
           .toList(),
+      order: record.data['order'] ?? 0,
     );
   }
 
@@ -49,6 +52,7 @@ class Post {
       'date': date?.toIso8601String(),
       'cover': coverUrl,
       'images': imageUrls,
+      'order': order,
     };
   }
 }
