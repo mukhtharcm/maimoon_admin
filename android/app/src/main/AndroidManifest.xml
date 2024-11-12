@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Place permissions here -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- For Android 12 or lower -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:label="maimoon_admin"
         android:name="${applicationName}"
@@ -30,11 +37,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-        <!-- For Android 12 or lower -->
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-            android:maxSdkVersion="32" />
-        <uses-permission android:name="android.permission.CAMERA" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
