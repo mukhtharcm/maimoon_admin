@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:maimoon_admin/features/posts/repositories/posts_repository.dart';
@@ -18,9 +19,12 @@ Future<void> setupServiceLocator() async {
     save: (String data) async => await prefs.setString('pb_auth', data),
     initial: authData,
   );
+
+  const prodUrl = 'https://maimoon.pockethost.io';
+  const devUrl = 'http://192.168.206.153:8090';
   // Core services
   getIt.registerLazySingleton<PocketBase>(
-    () => PocketBase('http://192.168.206.153:8090', authStore: authStore),
+    () => PocketBase(kDebugMode ? devUrl : prodUrl, authStore: authStore),
   );
 
   // Repositories

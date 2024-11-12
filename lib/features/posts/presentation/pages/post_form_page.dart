@@ -116,12 +116,7 @@ class _PostFormPageState extends State<PostFormPage> {
               },
             ),
             const SizedBox(height: 16),
-            BlocConsumer<SeriesBloc, SeriesState>(
-              listener: (context, state) {
-                if (state is SeriesLoaded && state.seriesList.isEmpty) {
-                  _showNoSeriesDialog(context);
-                }
-              },
+            BlocBuilder<SeriesBloc, SeriesState>(
               builder: (context, state) {
                 if (state is SeriesLoaded) {
                   return DropdownButtonFormField<String>(
@@ -353,40 +348,5 @@ class _PostFormPageState extends State<PostFormPage> {
         );
       }
     }
-  }
-
-  void _showNoSeriesDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('No Series Available'),
-        content:
-            const Text('You need to create a series before adding a post.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const PostsPage()),
-              );
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SeriesPage(),
-                ),
-              );
-            },
-            child: const Text('Create Series'),
-          ),
-        ],
-      ),
-    );
   }
 }
