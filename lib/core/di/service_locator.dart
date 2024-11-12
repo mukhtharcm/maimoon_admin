@@ -6,13 +6,21 @@ import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/auth/repositories/auth_repository.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
 
-void setupServiceLocator() {
+Future<void> setupServiceLocator() async {
+  final prefs = await SharedPreferences.getInstance();
+  final authData = prefs.getString('pb_auth');
+
+  final authStore = AsyncAuthStore(
+    save: (String data) async => await prefs.setString('pb_auth', data),
+    initial: authData,
+  );
   // Core services
   getIt.registerLazySingleton<PocketBase>(
-    () => PocketBase('http://localhost:8090'),
+    () => PocketBase('http://localhost:8090', authStore: authStore),
   );
 
   // Repositories

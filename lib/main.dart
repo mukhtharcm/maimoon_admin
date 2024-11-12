@@ -7,8 +7,9 @@ import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 
-void main() {
-  setupServiceLocator();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupServiceLocator();
   runApp(const MyApp());
 }
 
