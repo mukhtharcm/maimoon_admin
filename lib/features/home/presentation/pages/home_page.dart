@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
+import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
+import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
+import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -67,17 +71,44 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: const Icon(Icons.dashboard),
               title: const Text('Dashboard'),
-              onTap: () => context.go('/'),
+              onTap: () {
+                Navigator.pop(context);
+              },
             ),
             ListTile(
               leading: const Icon(Icons.article),
               title: const Text('Posts'),
-              onTap: () => context.go('/posts'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PostsPage()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.library_books),
               title: const Text('Series'),
-              onTap: () => context.go('/series'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SeriesPage()),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                context.read<AuthBloc>().add(LogoutEvent());
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                );
+              },
             ),
           ],
         ),
@@ -118,7 +149,10 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                       ),
-                      onTap: () => context.go('/posts'),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PostsPage()),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -143,7 +177,10 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                       ),
-                      onTap: () => context.go('/series'),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SeriesPage()),
+                      ),
                     ),
                   ),
                 ],
@@ -160,7 +197,10 @@ class _HomePageState extends State<HomePage> {
                     child: _ActionButton(
                       title: 'New Post',
                       icon: Icons.add_circle_outline,
-                      onTap: () => context.go('/posts'),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PostFormPage()),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -168,7 +208,10 @@ class _HomePageState extends State<HomePage> {
                     child: _ActionButton(
                       title: 'New Series',
                       icon: Icons.create_new_folder_outlined,
-                      onTap: () => context.go('/series'),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SeriesPage()),
+                      ),
                     ),
                   ),
                 ],

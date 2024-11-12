@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
@@ -29,7 +29,7 @@ class _SeriesPageState extends State<SeriesPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Series'),
         actions: [
@@ -233,8 +233,14 @@ class _SeriesCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 FilledButton.tonalIcon(
-                  onPressed: () =>
-                      context.go('/posts/new', extra: {'seriesId': series.id}),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PostFormPage(
+                        initialSeriesId: series.id,
+                      ),
+                    ),
+                  ),
                   icon: const Icon(Icons.add),
                   label: const Text('Add Post'),
                 ),
@@ -318,9 +324,13 @@ class _SeriesCard extends StatelessWidget {
                             style: theme.textTheme.bodySmall,
                           ),
                           trailing: const Icon(Icons.drag_handle),
-                          onTap: () => context.go(
-                            '/posts/edit/${post.id}',
-                            extra: post,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PostFormPage(
+                                post: post,
+                              ),
+                            ),
                           ),
                         );
                       },

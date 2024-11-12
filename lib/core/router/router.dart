@@ -1,4 +1,4 @@
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:maimoon_admin/core/di/service_locator.dart';
 import 'package:maimoon_admin/features/auth/repositories/auth_repository.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
@@ -8,52 +8,41 @@ import 'package:maimoon_admin/features/series/presentation/pages/series_page.dar
 import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/posts/models/post.dart';
 
-final router = GoRouter(
-  initialLocation: '/',
-  redirect: (context, state) {
-    final isAuthenticated = getIt<AuthRepository>().isAuthenticated;
-    final isLoginRoute = state.matchedLocation == '/login';
+class AppRouter {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const HomePage());
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginPage());
+      case '/posts':
+        return MaterialPageRoute(builder: (_) => const PostsPage());
+      case '/posts/new':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final String? seriesId = args?['seriesId'];
+        return MaterialPageRoute(
+          builder: (_) => PostFormPage(initialSeriesId: seriesId),
+        );
+      case '/posts/edit':
+        final post = settings.arguments as Post;
+        return MaterialPageRoute(
+          builder: (_) => PostFormPage(post: post),
+        );
+      case '/series':
+        return MaterialPageRoute(builder: (_) => const SeriesPage());
+      default:
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(
+              child: Text('No route defined for ${settings.name}'),
+            ),
+          ),
+        );
+    }
+  }
 
-    if (!isAuthenticated && !isLoginRoute) {
-      return '/login';
-    }
-    if (isAuthenticated && isLoginRoute) {
-      return '/';
-    }
-    return null;
-  },
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/posts',
-      builder: (context, state) => const PostsPage(),
-    ),
-    GoRoute(
-      path: '/posts/new',
-      builder: (context, state) {
-        final Map<String, dynamic>? extra =
-            state.extra as Map<String, dynamic>?;
-        final String? seriesId = extra?['seriesId'];
-        return PostFormPage(initialSeriesId: seriesId);
-      },
-    ),
-    GoRoute(
-      path: '/posts/edit/:id',
-      builder: (context, state) {
-        final post = (state.extra as Post);
-        return PostFormPage(post: post);
-      },
-    ),
-    GoRoute(
-      path: '/series',
-      builder: (context, state) => const SeriesPage(),
-    ),
-  ],
-);
+  static Widget getInitialPage() {
+    final isAuthenticated = getIt<AuthRepository>().isAuthenticated;
+    return isAuthenticated ? const HomePage() : const LoginPage();
+  }
+}

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/core/di/service_locator.dart';
-import 'package:maimoon_admin/core/router/router.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
+import 'package:maimoon_admin/features/home/presentation/pages/home_page.dart';
+import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +25,16 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<PostsBloc>()),
         BlocProvider(create: (_) => getIt<SeriesBloc>()),
       ],
-      child: MaterialApp.router(
+      child: MaterialApp(
         title: 'Maimoon Admin',
-        routerConfig: router,
+        home: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is Authenticated) {
+              return const HomePage();
+            }
+            return const LoginPage();
+          },
+        ),
         theme: FlexThemeData.light(
           scheme: FlexScheme.espresso,
           useMaterial3: true,

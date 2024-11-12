@@ -3,11 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/posts/models/post.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
-// import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:intl/intl.dart';
-
-import 'package:go_router/go_router.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 
 class PostsPage extends StatefulWidget {
@@ -33,12 +31,17 @@ class _PostsPageState extends State<PostsPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Posts'),
         actions: [
           FilledButton.icon(
-            onPressed: () => context.go('/posts/new'),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PostFormPage(),
+              ),
+            ),
             icon: const Icon(Icons.add),
             label: const Text('New Post'),
           ),
@@ -65,7 +68,12 @@ class _PostsPageState extends State<PostsPage> {
                     ),
                     const SizedBox(height: 16),
                     FilledButton.icon(
-                      onPressed: () => context.go('/posts/new'),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PostFormPage(),
+                        ),
+                      ),
                       icon: const Icon(Icons.add),
                       label: const Text('Create your first post'),
                     ),
@@ -81,8 +89,12 @@ class _PostsPageState extends State<PostsPage> {
                 final post = state.posts[index];
                 return _PostCard(
                   post: post,
-                  onEdit: () =>
-                      context.go('/posts/edit/${post.id}', extra: post),
+                  onEdit: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PostFormPage(post: post),
+                    ),
+                  ),
                   onDelete: () => _confirmDelete(context, post),
                 );
               },
