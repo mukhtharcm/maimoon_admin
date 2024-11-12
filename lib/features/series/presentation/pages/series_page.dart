@@ -160,6 +160,23 @@ class _SeriesPageState extends State<SeriesPage> {
   }
 
   Future<void> _confirmDelete(BuildContext context, Series series) async {
+    final postsBloc = context.read<PostsBloc>();
+    final postsState = postsBloc.state;
+
+    if (postsState is PostsLoaded) {
+      final seriesPosts =
+          postsState.posts.where((post) => post.seriesId == series.id).toList();
+
+      if (seriesPosts.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete series with existing posts.'),
+          ),
+        );
+        return;
+      }
+    }
+
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -229,7 +246,7 @@ class _SeriesCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 IconButton.outlined(
                   icon: const Icon(Icons.delete),
-                  onPressed: onDelete,
+                  onPressed: () => _confirmDelete(context, series),
                 ),
               ],
             ),
@@ -313,6 +330,50 @@ class _SeriesCard extends StatelessWidget {
               }
               return const SizedBox.shrink();
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, Series series) async {
+    final postsBloc = context.read<PostsBloc>();
+    final postsState = postsBloc.state;
+
+    if (postsState is PostsLoaded) {
+      final seriesPosts =
+          postsState.posts.where((post) => post.seriesId == series.id).toList();
+
+      if (seriesPosts.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete series with existing posts.'),
+          ),
+        );
+        return;
+      }
+    }
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Series'),
+        content: Text('Are you sure you want to delete "${series.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              context.read<SeriesBloc>().add(DeleteSeries(series.id));
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
           ),
         ],
       ),
