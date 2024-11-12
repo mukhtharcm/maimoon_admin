@@ -5,6 +5,7 @@ import 'package:maimoon_admin/core/di/service_locator.dart';
 import 'package:maimoon_admin/core/router/router.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
+import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 
 void main() {
   setupServiceLocator();
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => getIt<AuthBloc>()),
         BlocProvider(create: (_) => getIt<PostsBloc>()),
         BlocProvider(create: (_) => getIt<SeriesBloc>()),
       ],
