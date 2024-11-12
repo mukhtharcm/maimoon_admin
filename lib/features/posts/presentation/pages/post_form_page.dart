@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
@@ -9,6 +9,7 @@ import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+import 'dart:convert';
 
 class PostFormPage extends StatefulWidget {
   final Post? post;
@@ -42,8 +43,8 @@ class _PostFormPageState extends State<PostFormPage> {
     // Initialize the quill controller
     if (widget.post?.content != null && widget.post!.content.isNotEmpty) {
       try {
-        // If content is HTML, convert it to Delta
-        final document = Document()..insert(0, widget.post!.content);
+        // Parse HTML to Document
+        final document = Document.fromHtml(widget.post!.content);
         quillController = QuillController(
           document: document,
           selection: const TextSelection.collapsed(offset: 0),
@@ -296,6 +297,7 @@ class _PostFormPageState extends State<PostFormPage> {
         content: htmlContent,
         seriesId: selectedSeriesId,
         date: selectedDate,
+        coverFilename: widget.post?.coverFilename,
         coverUrl: widget.post?.coverUrl,
         imageUrls: additionalImagePaths,
       );

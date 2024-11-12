@@ -8,6 +8,7 @@ class Post {
   final String? seriesId;
   final DateTime? date;
   final String? coverUrl;
+  final String? coverFilename;
   final List<String> imageUrls;
   final int order;
 
@@ -18,6 +19,7 @@ class Post {
     this.seriesId,
     this.date,
     this.coverUrl,
+    this.coverFilename,
     this.imageUrls = const [],
     this.order = 0,
   });
@@ -32,6 +34,7 @@ class Post {
       date: record.data['date'] != null
           ? DateTime.parse(record.data['date'])
           : null,
+      coverFilename: record.data['cover'],
       coverUrl: record.data['cover'] != null
           ? pb.files.getUrl(record, record.data['cover']).toString()
           : null,
@@ -50,7 +53,7 @@ class Post {
       'content': content,
       'series': seriesId,
       'date': date?.toIso8601String(),
-      'cover': coverUrl,
+      'cover': coverFilename,
       'images': imageUrls,
       'order': order,
     };
