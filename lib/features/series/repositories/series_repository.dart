@@ -7,18 +7,18 @@ class SeriesRepository {
 
   Future<List<Series>> getAllSeries() async {
     final records = await pb.collection('series').getFullList();
-    return records.map((record) => Series.fromJson(record.data)).toList();
+    return records.map((record) => Series.fromRecord(record)).toList();
   }
 
   Future<Series> createSeries(Series series) async {
     final record = await pb.collection('series').create(body: series.toJson());
-    return Series.fromJson(record.data);
+    return Series.fromRecord(record);
   }
 
   Future<Series> updateSeries(String id, Series series) async {
     final record =
         await pb.collection('series').update(id, body: series.toJson());
-    return Series.fromJson(record.data);
+    return Series.fromRecord(record);
   }
 
   Future<void> deleteSeries(String id) async {

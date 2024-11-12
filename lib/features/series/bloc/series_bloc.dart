@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:maimoon_admin/features/series/repositories/series_repository.dart';
@@ -58,6 +59,7 @@ class SeriesBloc extends Bloc<SeriesEvent, SeriesState> {
       final seriesList = await repository.getAllSeries();
       emit(SeriesLoaded(seriesList));
     } catch (e) {
+      debugPrint(e.toString());
       emit(SeriesError(e.toString()));
     }
   }

@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         title: 'Maimoon Admin',
         routerConfig: router,
         theme: FlexThemeData.light(
-          scheme: FlexScheme.blueM3,
+          scheme: FlexScheme.espresso,
           useMaterial3: true,
           surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
           blendLevel: 1,
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         darkTheme: FlexThemeData.dark(
-          scheme: FlexScheme.blueM3,
+          scheme: FlexScheme.espresso,
           useMaterial3: true,
           surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
           blendLevel: 2,

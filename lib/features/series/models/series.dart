@@ -1,3 +1,5 @@
+import 'package:pocketbase/pocketbase.dart';
+
 class Series {
   final String id;
   final String name;
@@ -7,10 +9,10 @@ class Series {
     required this.name,
   });
 
-  factory Series.fromJson(Map<String, dynamic> json) {
+  factory Series.fromRecord(RecordModel record) {
     return Series(
-      id: json['id'],
-      name: json['name'],
+      id: record.id,
+      name: record.data['name'] ?? '',
     );
   }
 

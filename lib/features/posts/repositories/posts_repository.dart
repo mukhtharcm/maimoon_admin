@@ -7,17 +7,17 @@ class PostsRepository {
 
   Future<List<Post>> getPosts() async {
     final records = await pb.collection('posts').getFullList();
-    return records.map((record) => Post.fromJson(record.data)).toList();
+    return records.map((record) => Post.fromRecord(record)).toList();
   }
 
   Future<Post> createPost(Post post) async {
     final record = await pb.collection('posts').create(body: post.toJson());
-    return Post.fromJson(record.data);
+    return Post.fromRecord(record);
   }
 
   Future<Post> updatePost(String id, Post post) async {
     final record = await pb.collection('posts').update(id, body: post.toJson());
-    return Post.fromJson(record.data);
+    return Post.fromRecord(record);
   }
 
   Future<void> deletePost(String id) async {

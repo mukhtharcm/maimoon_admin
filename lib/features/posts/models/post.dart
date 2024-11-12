@@ -1,3 +1,5 @@
+import 'package:pocketbase/pocketbase.dart';
+
 class Post {
   final String id;
   final String title;
@@ -17,15 +19,17 @@ class Post {
     this.imageUrls = const [],
   });
 
-  factory Post.fromJson(Map<String, dynamic> json) {
+  factory Post.fromRecord(RecordModel record) {
     return Post(
-      id: json['id'],
-      title: json['title'],
-      content: json['content'],
-      seriesId: json['series'],
-      date: json['date'] != null ? DateTime.parse(json['date']) : null,
-      coverUrl: json['cover'],
-      imageUrls: List<String>.from(json['images'] ?? []),
+      id: record.id,
+      title: record.data['title'] ?? '',
+      content: record.data['content'] ?? '',
+      seriesId: record.data['series'],
+      date: record.data['date'] != null
+          ? DateTime.parse(record.data['date'])
+          : null,
+      coverUrl: record.data['cover'],
+      imageUrls: List<String>.from(record.data['images'] ?? []),
     );
   }
 
