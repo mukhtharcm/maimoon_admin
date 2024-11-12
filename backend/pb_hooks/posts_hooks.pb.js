@@ -1,8 +1,6 @@
 onRecordBeforeCreateRequest((e) => {
     const { collection, record } = e;
 
-    console.log(record);
-
     // Only run this hook for the posts collection
     if (collection.name !== 'posts') {
         return;
@@ -12,7 +10,7 @@ onRecordBeforeCreateRequest((e) => {
     const seriesId = record.get('series');
 
     if (!seriesId) {
-        record.set('order', 0); // Default order for posts without series
+        record.set('order', 1); // Start with order 1 for posts without series
         return;
     }
 
@@ -20,11 +18,11 @@ onRecordBeforeCreateRequest((e) => {
     const posts = $app.dao().findRecordsByFilter(
         'posts',
         `series = '${seriesId}'`,
-        '+order', // Sort by order ascending
+        '-order', // Sort by order descending
         1,        // Limit to 1 record
     );
 
-    let nextOrder = 0;
+    let nextOrder = 1; // Start with order 1
     if (posts.length > 0) {
         const lastPost = posts[0];
         nextOrder = lastPost.get('order') + 1;
