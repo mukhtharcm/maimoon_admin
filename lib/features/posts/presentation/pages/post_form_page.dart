@@ -12,8 +12,13 @@ import 'dart:io';
 
 class PostFormPage extends StatefulWidget {
   final Post? post;
+  final String? initialSeriesId;
 
-  const PostFormPage({super.key, this.post});
+  const PostFormPage({
+    super.key,
+    this.post,
+    this.initialSeriesId,
+  });
 
   @override
   State<PostFormPage> createState() => _PostFormPageState();
@@ -51,7 +56,8 @@ class _PostFormPageState extends State<PostFormPage> {
       quillController = QuillController.basic();
     }
 
-    selectedSeriesId = widget.post?.seriesId;
+    // Use either the post's series ID or the initial series ID
+    selectedSeriesId = widget.post?.seriesId ?? widget.initialSeriesId;
     selectedDate = widget.post?.date ?? DateTime.now();
     context.read<SeriesBloc>().add(LoadAllSeries());
   }
@@ -69,7 +75,14 @@ class _PostFormPageState extends State<PostFormPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/posts'),
+          onPressed: () {
+            // If we can't pop, go to posts page
+            if (!context.canPop()) {
+              context.go('/posts');
+            } else {
+              context.pop();
+            }
+          },
         ),
         title: Text(widget.post == null ? 'New Post' : 'Edit Post'),
         actions: [
@@ -298,7 +311,12 @@ class _PostFormPageState extends State<PostFormPage> {
               );
         }
 
-        context.go('/posts');
+        // If we can't pop, go to posts page
+        if (!context.canPop()) {
+          context.go('/posts');
+        } else {
+          context.pop();
+        }
       } catch (e) {
         debugPrint('Error saving post: $e');
         ScaffoldMessenger.of(context).showSnackBar(

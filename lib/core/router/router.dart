@@ -37,7 +37,12 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/posts/new',
-      builder: (context, state) => const PostFormPage(),
+      builder: (context, state) {
+        final Map<String, dynamic>? extra =
+            state.extra as Map<String, dynamic>?;
+        final String? seriesId = extra?['seriesId'];
+        return PostFormPage(initialSeriesId: seriesId);
+      },
     ),
     GoRoute(
       path: '/posts/edit/:id',
