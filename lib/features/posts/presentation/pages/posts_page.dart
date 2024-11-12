@@ -8,6 +8,7 @@ import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 // import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 
 class PostsPage extends StatefulWidget {
   const PostsPage({super.key});
@@ -28,6 +29,10 @@ class _PostsPageState extends State<PostsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/'),
+        ),
         title: const Text('Posts'),
         actions: [
           IconButton(

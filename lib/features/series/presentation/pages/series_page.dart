@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 
@@ -21,6 +22,10 @@ class _SeriesPageState extends State<SeriesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/'),
+        ),
         title: const Text('Series'),
         actions: [
           IconButton(
