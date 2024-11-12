@@ -26,6 +26,8 @@ class Post {
 
   factory Post.fromRecord(RecordModel record) {
     final pb = getIt<PocketBase>();
+    final coverFilename = record.data['cover'];
+
     return Post(
       id: record.id,
       title: record.data['title'] ?? '',
@@ -34,14 +36,12 @@ class Post {
       date: record.data['date'] != null
           ? DateTime.parse(record.data['date'])
           : null,
-      coverFilename: record.data['cover'],
-      coverUrl: record.data['cover'] != null
-          ? pb.files.getUrl(record, record.data['cover']).toString()
+      coverFilename: coverFilename,
+      coverUrl: coverFilename != null && coverFilename.isNotEmpty
+          ? pb.files.getUrl(record, coverFilename).toString()
           : null,
       imageUrls: List<String>.from(record.data['images'] ?? [])
-          .map(
-            (filename) => pb.files.getUrl(record, filename).toString(),
-          )
+          .map((filename) => pb.files.getUrl(record, filename).toString())
           .toList(),
       order: record.data['order'] ?? 0,
     );

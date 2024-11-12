@@ -181,12 +181,30 @@ class _PostFormPageState extends State<PostFormPage> {
                         width: double.infinity,
                         fit: BoxFit.cover,
                       )
-                    else if (widget.post?.coverUrl != null)
+                    else if (widget.post?.coverUrl != null &&
+                        widget.post!.coverUrl!.isNotEmpty)
                       Image.network(
                         widget.post!.coverUrl!,
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 200,
+                            width: double.infinity,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            child: Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
