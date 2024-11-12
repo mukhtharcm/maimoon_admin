@@ -1,6 +1,8 @@
 onRecordBeforeCreateRequest((e) => {
     const { collection, record } = e;
 
+    console.log(record);
+
     // Only run this hook for the posts collection
     if (collection.name !== 'posts') {
         return;
