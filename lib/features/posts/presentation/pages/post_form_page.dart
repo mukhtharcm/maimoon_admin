@@ -11,9 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 
-import 'package:pocketbase/pocketbase.dart';
-import 'package:http/http.dart' as http;
-
 class PostFormPage extends StatefulWidget {
   final Post? post;
 
@@ -269,8 +266,6 @@ class _PostFormPageState extends State<PostFormPage> {
 
   void _savePost() async {
     if (_formKey.currentState!.validate()) {
-      String? finalCoverUrl = widget.post?.coverUrl;
-
       // Convert Quill Delta to HTML
       final delta = quillController.document.toDelta();
       final converter = QuillDeltaToHtmlConverter(
@@ -283,53 +278,25 @@ class _PostFormPageState extends State<PostFormPage> {
       );
       final htmlContent = converter.convert();
 
-      // First create/update the post
       final newPost = Post(
         id: widget.post?.id ?? '',
         title: titleController.text,
         content: htmlContent,
         seriesId: selectedSeriesId,
         date: selectedDate,
-        coverUrl: finalCoverUrl,
+        coverUrl: widget.post?.coverUrl,
         imageUrls: additionalImagePaths,
       );
 
       try {
-        if (selectedCoverImage != null) {
-          final bytes = await selectedCoverImage!.readAsBytes();
-          final file = http.MultipartFile.fromBytes(
-            'cover', // field name in PocketBase
-            bytes,
-            filename: 'cover_image.jpg',
-          );
-
-          if (widget.post == null) {
-            // Creating new post with image
-            context.read<PostsBloc>().add(
-                  CreatePost(newPost),
-                );
-            await getIt<PocketBase>().collection('posts').create(
-              body: newPost.toJson(),
-              files: [file],
-            );
-          } else {
-            // Updating existing post with new image
-            await getIt<PocketBase>().collection('posts').update(
-              widget.post!.id,
-              body: newPost.toJson(),
-              files: [file],
-            );
-            context.read<PostsBloc>().add(
-                  UpdatePost(widget.post!.id, newPost),
-                );
-          }
+        if (widget.post == null) {
+          context.read<PostsBloc>().add(
+                CreatePost(newPost, selectedCoverImage),
+              );
         } else {
-          // No new image, just update/create the post normally
-          if (widget.post == null) {
-            context.read<PostsBloc>().add(CreatePost(newPost));
-          } else {
-            context.read<PostsBloc>().add(UpdatePost(widget.post!.id, newPost));
-          }
+          context.read<PostsBloc>().add(
+                UpdatePost(widget.post!.id, newPost, selectedCoverImage),
+              );
         }
 
         context.go('/posts');

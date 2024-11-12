@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/features/posts/models/post.dart';
 import 'package:maimoon_admin/features/posts/repositories/posts_repository.dart';
+import 'dart:io';
 
 // Events
 abstract class PostsEvent {}
@@ -9,13 +10,15 @@ class LoadPosts extends PostsEvent {}
 
 class CreatePost extends PostsEvent {
   final Post post;
-  CreatePost(this.post);
+  final File? coverImage;
+  CreatePost(this.post, this.coverImage);
 }
 
 class UpdatePost extends PostsEvent {
   final String id;
   final Post post;
-  UpdatePost(this.id, this.post);
+  final File? coverImage;
+  UpdatePost(this.id, this.post, this.coverImage);
 }
 
 class DeletePost extends PostsEvent {
@@ -63,7 +66,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
 
   Future<void> _onCreatePost(CreatePost event, Emitter<PostsState> emit) async {
     try {
-      await repository.createPost(event.post);
+      await repository.createPost(event.post, coverImage: event.coverImage);
       add(LoadPosts());
     } catch (e) {
       emit(PostsError(e.toString()));
@@ -72,7 +75,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
 
   Future<void> _onUpdatePost(UpdatePost event, Emitter<PostsState> emit) async {
     try {
-      await repository.updatePost(event.id, event.post);
+      await repository.updatePost(event.id, event.post,
+          coverImage: event.coverImage);
       add(LoadPosts());
     } catch (e) {
       emit(PostsError(e.toString()));
