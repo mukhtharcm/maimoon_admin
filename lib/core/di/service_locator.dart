@@ -20,7 +20,7 @@ Future<void> setupServiceLocator() async {
   );
   // Core services
   getIt.registerLazySingleton<PocketBase>(
-    () => PocketBase('http://localhost:8090', authStore: authStore),
+    () => PocketBase('http://192.168.136.153:8090', authStore: authStore),
   );
 
   // Repositories
