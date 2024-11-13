@@ -24,9 +24,9 @@ Future<void> setupServiceLocator() async {
   const devUrl = 'http://localhost:8090';
   // Core services
   getIt.registerLazySingleton<PocketBase>(
-    // () => PocketBase(kDebugMode ? devUrl : prodUrl, authStore: authStore),
+    () => PocketBase(kDebugMode ? devUrl : prodUrl, authStore: authStore),
     // use prodUrl for now
-    () => PocketBase(prodUrl, authStore: authStore),
+    // () => PocketBase(prodUrl, authStore: authStore),
   );
 
   // Repositories

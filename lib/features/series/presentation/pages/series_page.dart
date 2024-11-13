@@ -5,6 +5,8 @@ import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class SeriesPage extends StatefulWidget {
   const SeriesPage({super.key});
@@ -91,34 +93,158 @@ class _SeriesPageState extends State<SeriesPage> {
 
   Future<void> _showAddSeriesDialog(BuildContext context) async {
     final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    File? selectedImage;
+    bool isSaving = false;
 
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Series'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(labelText: 'Series Name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                context.read<SeriesBloc>().add(
-                      CreateSeries(
-                        Series(id: '', name: nameController.text),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Add Series',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    );
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
+                      const SizedBox(height: 16),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: nameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Series Name',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: descriptionController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Description',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 16),
+                              StatefulBuilder(
+                                builder: (context, setState) => Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (selectedImage != null)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          selectedImage!,
+                                          height: 200,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.image),
+                                      label: const Text('Choose Image'),
+                                      onPressed: () async {
+                                        final image = await ImagePicker()
+                                            .pickImage(
+                                                source: ImageSource.gallery);
+                                        if (image != null) {
+                                          setState(() {
+                                            selectedImage = File(image.path);
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed:
+                                isSaving ? null : () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (nameController.text.isNotEmpty) {
+                                      setState(() {
+                                        isSaving = true;
+                                      });
+                                      context.read<SeriesBloc>().add(
+                                            CreateSeries(
+                                              Series(
+                                                id: '',
+                                                name: nameController.text,
+                                                description:
+                                                    descriptionController.text,
+                                              ),
+                                              selectedImage,
+                                            ),
+                                          );
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSaving)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 8),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                Text(isSaving ? 'Saving...' : 'Add'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSaving)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black26,
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -126,35 +252,193 @@ class _SeriesPageState extends State<SeriesPage> {
   Future<void> _showEditSeriesDialog(
       BuildContext context, Series series) async {
     final nameController = TextEditingController(text: series.name);
+    final descriptionController =
+        TextEditingController(text: series.description);
+    File? selectedImage;
+    bool isSaving = false;
 
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Series'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(labelText: 'Series Name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                context.read<SeriesBloc>().add(
-                      UpdateSeries(
-                        series.id,
-                        Series(id: series.id, name: nameController.text),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Edit Series',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    );
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Save'),
+                      const SizedBox(height: 16),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: nameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Series Name',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: descriptionController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Description',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 16),
+                              StatefulBuilder(
+                                builder: (context, setState) => Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (selectedImage != null)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          selectedImage!,
+                                          height: 200,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    else if (series.imageUrl != null)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          series.imageUrl!,
+                                          height: 200,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Container(
+                                              height: 200,
+                                              width: double.infinity,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Icon(
+                                                Icons.broken_image,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.image),
+                                      label: const Text('Choose Image'),
+                                      onPressed: () async {
+                                        final image = await ImagePicker()
+                                            .pickImage(
+                                                source: ImageSource.gallery);
+                                        if (image != null) {
+                                          setState(() {
+                                            selectedImage = File(image.path);
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed:
+                                isSaving ? null : () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (nameController.text.isNotEmpty) {
+                                      setState(() {
+                                        isSaving = true;
+                                      });
+                                      context.read<SeriesBloc>().add(
+                                            UpdateSeries(
+                                              series.id,
+                                              Series(
+                                                id: series.id,
+                                                name: nameController.text,
+                                                description:
+                                                    descriptionController.text,
+                                                imageFilename:
+                                                    series.imageFilename,
+                                                imageUrl: series.imageUrl,
+                                              ),
+                                              selectedImage,
+                                            ),
+                                          );
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSaving)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 8),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                Text(isSaving ? 'Saving...' : 'Save'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSaving)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black26,
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

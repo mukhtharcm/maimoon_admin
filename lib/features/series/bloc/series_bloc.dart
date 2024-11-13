@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
 import 'package:maimoon_admin/features/series/repositories/series_repository.dart';
+import 'dart:io';
 
 // Events
 abstract class SeriesEvent {}
@@ -10,13 +11,15 @@ class LoadAllSeries extends SeriesEvent {}
 
 class CreateSeries extends SeriesEvent {
   final Series series;
-  CreateSeries(this.series);
+  final File? image;
+  CreateSeries(this.series, this.image);
 }
 
 class UpdateSeries extends SeriesEvent {
   final String id;
   final Series series;
-  UpdateSeries(this.id, this.series);
+  final File? image;
+  UpdateSeries(this.id, this.series, this.image);
 }
 
 class DeleteSeries extends SeriesEvent {
