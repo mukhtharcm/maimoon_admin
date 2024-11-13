@@ -70,7 +70,7 @@ class SeriesBloc extends Bloc<SeriesEvent, SeriesState> {
   Future<void> _onCreateSeries(
       CreateSeries event, Emitter<SeriesState> emit) async {
     try {
-      await repository.createSeries(event.series);
+      await repository.createSeries(event.series, image: event.image);
       add(LoadAllSeries());
     } catch (e) {
       emit(SeriesError(e.toString()));
@@ -80,7 +80,7 @@ class SeriesBloc extends Bloc<SeriesEvent, SeriesState> {
   Future<void> _onUpdateSeries(
       UpdateSeries event, Emitter<SeriesState> emit) async {
     try {
-      await repository.updateSeries(event.id, event.series);
+      await repository.updateSeries(event.id, event.series, image: event.image);
       add(LoadAllSeries());
     } catch (e) {
       emit(SeriesError(e.toString()));
