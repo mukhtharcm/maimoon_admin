@@ -44,3 +44,4 @@ app.*.map.json
 
 #pocketbase
 pb_data
+frontend
