@@ -30,4 +30,4 @@ onRecordBeforeCreateRequest((e) => {
 
     // Set the new order
     record.set('order', nextOrder);
-}); 
+});     

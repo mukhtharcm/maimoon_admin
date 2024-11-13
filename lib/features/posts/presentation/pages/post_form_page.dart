@@ -34,6 +34,7 @@ class _PostFormPageState extends State<PostFormPage> {
   List<String> additionalImagePaths = [];
   final _formKey = GlobalKey<FormState>();
   File? selectedCoverImage;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -76,253 +77,291 @@ class _PostFormPageState extends State<PostFormPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const PostsPage()),
-              );
-            }
-          },
+          onPressed: _isSaving
+              ? null // Disable back button while saving
+              : () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PostsPage()),
+                    );
+                  }
+                },
         ),
         title: Text(widget.post == null ? 'New Post' : 'Edit Post'),
         actions: [
           FilledButton.icon(
-            onPressed: _savePost,
-            icon: const Icon(Icons.save),
-            label: const Text('Save'),
+            onPressed: _isSaving ? null : _savePost, // Disable while saving
+            icon: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.save),
+            label: Text(_isSaving ? 'Saving...' : 'Save'),
           ),
           const SizedBox(width: 16),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a title';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            BlocBuilder<SeriesBloc, SeriesState>(
-              builder: (context, state) {
-                if (state is SeriesLoaded) {
-                  return DropdownButtonFormField<String>(
-                    value: selectedSeriesId,
-                    decoration: const InputDecoration(
-                      labelText: 'Series',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem(
-                        value: null,
-                        child: Text('No Series'),
-                      ),
-                      ...state.seriesList.map(
-                        (series) => DropdownMenuItem(
-                          value: series.id,
-                          child: Text(series.name),
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => selectedSeriesId = value),
-                  );
-                }
-                return const LinearProgressIndicator();
-              },
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: ListTile(
-                title: Text(
-                  'Date: ${DateFormat.yMMMd().format(selectedDate)}',
+      body: Stack(
+        children: [
+          Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
                 ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null) {
-                    setState(() => selectedDate = date);
-                  }
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Cover Image',
-                      style: Theme.of(context).textTheme.titleMedium,
+                const SizedBox(height: 16),
+                BlocBuilder<SeriesBloc, SeriesState>(
+                  builder: (context, state) {
+                    if (state is SeriesLoaded) {
+                      return DropdownButtonFormField<String>(
+                        value: selectedSeriesId,
+                        decoration: const InputDecoration(
+                          labelText: 'Series',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('No Series'),
+                          ),
+                          ...state.seriesList.map(
+                            (series) => DropdownMenuItem(
+                              value: series.id,
+                              child: Text(series.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => selectedSeriesId = value),
+                      );
+                    }
+                    return const LinearProgressIndicator();
+                  },
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    title: Text(
+                      'Date: ${DateFormat.yMMMd().format(selectedDate)}',
                     ),
-                    const SizedBox(height: 8),
-                    if (selectedCoverImage != null)
-                      Image.file(
-                        selectedCoverImage!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    else if (widget.post?.coverUrl != null &&
-                        widget.post!.coverUrl!.isNotEmpty)
-                      Image.network(
-                        widget.post!.coverUrl!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (date != null) {
+                        setState(() => selectedDate = date);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cover Image',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        if (selectedCoverImage != null)
+                          Image.file(
+                            selectedCoverImage!,
                             height: 200,
                             width: double.infinity,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
-                            child: Center(
-                              child: Icon(
-                                Icons.broken_image,
+                            fit: BoxFit.cover,
+                          )
+                        else if (widget.post?.coverUrl != null &&
+                            widget.post!.coverUrl!.isNotEmpty)
+                          Image.network(
+                            widget.post!.coverUrl!,
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                width: double.infinity,
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.image),
-                      label: const Text('Choose Image'),
-                      onPressed: () async {
-                        final image = await ImagePicker()
-                            .pickImage(source: ImageSource.gallery);
-                        if (image != null) {
-                          setState(() {
-                            selectedCoverImage = File(image.path);
-                            coverImagePath = image.path;
-                          });
-                        }
-                      },
+                                    .surfaceContainerHighest,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.image),
+                          label: const Text('Choose Image'),
+                          onPressed: () async {
+                            final image = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+                            if (image != null) {
+                              setState(() {
+                                selectedCoverImage = File(image.path);
+                                coverImagePath = image.path;
+                              });
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Content',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    QuillToolbar.simple(
-                      configurations: QuillSimpleToolbarConfigurations(
-                        controller: quillController,
-                        showDividers: false,
-                        showFontFamily: false,
-                        showFontSize: false,
-                        showBoldButton: true,
-                        showItalicButton: true,
-                        showSmallButton: false,
-                        showUnderLineButton: true,
-                        showStrikeThrough: false,
-                        showInlineCode: false,
-                        showColorButton: false,
-                        showBackgroundColorButton: false,
-                        showClearFormat: true,
-                        showAlignmentButtons: true,
-                        showLeftAlignment: true,
-                        showCenterAlignment: true,
-                        showRightAlignment: true,
-                        showJustifyAlignment: true,
-                        showHeaderStyle: false,
-                        showListNumbers: true,
-                        showListBullets: true,
-                        showListCheck: false,
-                        showCodeBlock: false,
-                        showQuote: true,
-                        showIndent: true,
-                        showLink: true,
-                        showUndo: true,
-                        showRedo: true,
-                      ),
-                    ),
-                    Container(
-                      height: 400,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: QuillEditor.basic(
-                        configurations: QuillEditorConfigurations(
-                          controller: quillController,
-                          sharedConfigurations: const QuillSharedConfigurations(
-                            locale: Locale('en'),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Content',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        QuillToolbar.simple(
+                          configurations: QuillSimpleToolbarConfigurations(
+                            controller: quillController,
+                            showDividers: false,
+                            showFontFamily: false,
+                            showFontSize: false,
+                            showBoldButton: true,
+                            showItalicButton: true,
+                            showSmallButton: false,
+                            showUnderLineButton: true,
+                            showStrikeThrough: false,
+                            showInlineCode: false,
+                            showColorButton: false,
+                            showBackgroundColorButton: false,
+                            showClearFormat: true,
+                            showAlignmentButtons: true,
+                            showLeftAlignment: true,
+                            showCenterAlignment: true,
+                            showRightAlignment: true,
+                            showJustifyAlignment: true,
+                            showHeaderStyle: false,
+                            showListNumbers: true,
+                            showListBullets: true,
+                            showListCheck: false,
+                            showCodeBlock: false,
+                            showQuote: true,
+                            showIndent: true,
+                            showLink: true,
+                            showUndo: true,
+                            showRedo: true,
                           ),
                         ),
-                      ),
+                        Container(
+                          height: 400,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: QuillEditor.basic(
+                            configurations: QuillEditorConfigurations(
+                              controller: quillController,
+                              sharedConfigurations:
+                                  const QuillSharedConfigurations(
+                                locale: Locale('en'),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          if (_isSaving)
+            Container(
+              color: Colors.black26,
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
   void _savePost() async {
     if (_formKey.currentState!.validate()) {
-      // Convert Quill Delta to HTML
-      final delta = quillController.document.toDelta();
-      final converter = QuillDeltaToHtmlConverter(
-        delta.toJson(),
-        ConverterOptions(
-          multiLineBlockquote: true,
-          multiLineHeader: true,
-          multiLineCodeblock: true,
-        ),
-      );
-      final htmlContent = converter.convert();
+      // Validate series selection
+      if (selectedSeriesId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a series'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-      final newPost = Post(
-        id: widget.post?.id ?? '',
-        title: titleController.text,
-        content: htmlContent,
-        seriesId: selectedSeriesId,
-        date: selectedDate,
-        coverFilename: widget.post?.coverFilename,
-        coverUrl: widget.post?.coverUrl,
-        imageUrls: additionalImagePaths,
-      );
+      setState(() {
+        _isSaving = true;
+      });
 
       try {
+        // Convert Quill Delta to HTML
+        final delta = quillController.document.toDelta();
+        final converter = QuillDeltaToHtmlConverter(
+          delta.toJson(),
+          ConverterOptions(
+            multiLineBlockquote: true,
+            multiLineHeader: true,
+            multiLineCodeblock: true,
+          ),
+        );
+        final htmlContent = converter.convert();
+
+        final newPost = Post(
+          id: widget.post?.id ?? '',
+          title: titleController.text,
+          content: htmlContent,
+          seriesId: selectedSeriesId,
+          date: selectedDate,
+          coverFilename: widget.post?.coverFilename,
+          coverUrl: widget.post?.coverUrl,
+          imageUrls: additionalImagePaths,
+        );
+
         if (widget.post == null) {
           context.read<PostsBloc>().add(
                 CreatePost(newPost, selectedCoverImage),
@@ -331,6 +370,16 @@ class _PostFormPageState extends State<PostFormPage> {
           context.read<PostsBloc>().add(
                 UpdatePost(widget.post!.id, newPost, selectedCoverImage),
               );
+        }
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Post saved successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
 
         if (Navigator.canPop(context)) {
@@ -343,9 +392,17 @@ class _PostFormPageState extends State<PostFormPage> {
         }
       } catch (e) {
         debugPrint('Error saving post: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving post: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving post: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            _isSaving = false;
+          });
+        }
       }
     }
   }
