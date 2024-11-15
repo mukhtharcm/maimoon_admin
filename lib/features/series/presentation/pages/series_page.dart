@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maimoon_admin/features/posts/models/post.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/series/models/series.dart';
@@ -578,42 +579,56 @@ class _SeriesCard extends StatelessWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: seriesPosts.length,
                       onReorder: (oldIndex, newIndex) {
-                        // TODO: Implement reordering logic
+                        // Adjust newIndex if moving downwards
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
+
+                        // Get the reordered posts list
+                        final posts = List<Post>.from(seriesPosts);
+                        final item = posts.removeAt(oldIndex);
+                        posts.insert(newIndex, item);
+
+                        // Update order numbers
+                        for (var i = 0; i < posts.length; i++) {
+                          final post = posts[i];
+                          if (post.order != i + 1) {
+                            context.read<PostsBloc>().add(
+                                  UpdatePostOrder(
+                                    postId: post.id,
+                                    newOrder: i + 1,
+                                  ),
+                                );
+                          }
+                        }
                       },
                       itemBuilder: (context, index) {
                         final post = seriesPosts[index];
-                        return ListTile(
+                        return Padding(
                           key: Key(post.id),
-                          leading: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Center(
-                              child: Text(
-                                post.order.toString(),
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.onPrimaryContainer,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              leading: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    post.order.toString(),
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color:
+                                          theme.colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          title: Text(post.title),
-                          subtitle: Text(
-                            post.date != null
-                                ? DateFormat.yMMMd().format(post.date!)
-                                : 'No date',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          trailing: const Icon(Icons.drag_handle),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PostFormPage(
-                                post: post,
-                              ),
+                              title: Text(post.title),
+                              trailing: const Icon(Icons.drag_handle),
                             ),
                           ),
                         );

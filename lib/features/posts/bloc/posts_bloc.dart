@@ -26,6 +26,16 @@ class DeletePost extends PostsEvent {
   DeletePost(this.id);
 }
 
+class UpdatePostOrder extends PostsEvent {
+  final String postId;
+  final int newOrder;
+
+  UpdatePostOrder({
+    required this.postId,
+    required this.newOrder,
+  });
+}
+
 // States
 abstract class PostsState {}
 
@@ -52,6 +62,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     on<CreatePost>(_onCreatePost);
     on<UpdatePost>(_onUpdatePost);
     on<DeletePost>(_onDeletePost);
+    on<UpdatePostOrder>(_onUpdatePostOrder);
   }
 
   Future<void> _onLoadPosts(LoadPosts event, Emitter<PostsState> emit) async {
@@ -87,6 +98,18 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     try {
       await repository.deletePost(event.id);
       add(LoadPosts());
+    } catch (e) {
+      emit(PostsError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdatePostOrder(
+    UpdatePostOrder event,
+    Emitter<PostsState> emit,
+  ) async {
+    try {
+      await repository.updatePostOrder(event.postId, event.newOrder);
+      add(LoadPosts()); // Reload posts to get updated order
     } catch (e) {
       emit(PostsError(e.toString()));
     }

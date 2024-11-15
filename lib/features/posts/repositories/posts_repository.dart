@@ -55,4 +55,11 @@ class PostsRepository {
   Future<void> deletePost(String id) async {
     await pb.collection('posts').delete(id);
   }
+
+  Future<void> updatePostOrder(String postId, int newOrder) async {
+    await pb.collection('posts').update(
+      postId,
+      body: {'order': newOrder},
+    );
+  }
 }
