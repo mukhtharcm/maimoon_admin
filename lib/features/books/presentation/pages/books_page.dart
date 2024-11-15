@@ -5,6 +5,10 @@ import 'package:maimoon_admin/features/books/domain/models/book.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:maimoon_admin/features/auth/models/user.dart';
+import 'package:maimoon_admin/features/auth/repositories/users_repository.dart';
+import 'package:maimoon_admin/core/di/service_locator.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key});
@@ -24,7 +28,7 @@ class _BooksPageState extends State<BooksPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = (width / 300).floor();
+    final crossAxisCount = (width / 250).floor();
 
     return Scaffold(
       appBar: AppBar(
@@ -85,12 +89,12 @@ class _BooksPageState extends State<BooksPage> {
             }
 
             return GridView.builder(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 24,
-                mainAxisSpacing: 24,
+                childAspectRatio: 0.65,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
               ),
               itemCount: state.books.length,
               itemBuilder: (context, index) {
@@ -117,6 +121,7 @@ class _BooksPageState extends State<BooksPage> {
     final pagesController = TextEditingController();
     DateTime? selectedDate;
     File? selectedCoverImage;
+    String? selectedAuthorId = getIt<PocketBase>().authStore.model?.id;
     bool isSaving = false;
 
     return showDialog(
@@ -297,6 +302,57 @@ class _BooksPageState extends State<BooksPage> {
                                 }
                               },
                             ),
+                            const SizedBox(height: 16),
+                            FutureBuilder<List<User>>(
+                              future: getIt<UsersRepository>().getUsers(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const LinearProgressIndicator();
+                                }
+
+                                if (snapshot.hasError) {
+                                  return Text(
+                                    'Error loading authors',
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                    ),
+                                  );
+                                }
+
+                                final users = snapshot.data ?? [];
+
+                                return DropdownButtonFormField<String>(
+                                  value: selectedAuthorId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Author',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: [
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Text('Select Author'),
+                                    ),
+                                    ...users.map(
+                                      (user) => DropdownMenuItem(
+                                        value: user.id,
+                                        child: Text(user.name),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() => selectedAuthorId = value);
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please select an author';
+                                    }
+                                    return null;
+                                  },
+                                );
+                              },
+                            ),
                             const SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -471,6 +527,9 @@ class _BooksPageState extends State<BooksPage> {
     );
     DateTime? selectedDate = book.publishDate;
     File? selectedCoverImage;
+    String? selectedAuthorId = book.authorId?.isNotEmpty == true
+        ? book.authorId
+        : getIt<PocketBase>().authStore.model?.id;
     bool isSaving = false;
 
     return showDialog(
@@ -736,8 +795,10 @@ class _BookCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 3 / 4,
+            // Smaller cover image
+            SizedBox(
+              height: 180,
+              width: double.infinity,
               child: book.coverUrl != null
                   ? Image.network(
                       book.coverUrl!,
@@ -750,7 +811,7 @@ class _BookCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -759,7 +820,7 @@ class _BookCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (book.description != null) ...[
@@ -773,28 +834,28 @@ class _BookCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    if (book.price != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        '₹${book.price!.toStringAsFixed(2)}',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                     const Spacer(),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        if (book.price != null)
+                          Text(
+                            '₹${book.price!.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        const Spacer(),
                         IconButton.outlined(
                           icon: const Icon(Icons.edit),
                           onPressed: onEdit,
+                          visualDensity: VisualDensity.compact,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
                         IconButton.outlined(
                           icon: const Icon(Icons.delete),
                           onPressed: onDelete,
+                          visualDensity: VisualDensity.compact,
                         ),
                       ],
                     ),
@@ -814,7 +875,7 @@ class _BookCard extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.book,
-          size: 48,
+          size: 32,
           color: theme.colorScheme.onSurfaceVariant,
         ),
       ),

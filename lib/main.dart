@@ -10,11 +10,25 @@ import 'package:maimoon_admin/features/books/bloc/books_bloc.dart';
 import 'package:maimoon_admin/features/home/presentation/pages/home_page.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
 import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
-// import 'package:google_fonts/google_fonts.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupServiceLocator();
+
+  // Get PocketBase instance
+  final pb = getIt<PocketBase>();
+
+  // Try to refresh auth if there's an existing auth store
+  if (pb.authStore.isValid) {
+    try {
+      await pb.collection('users').authRefresh();
+    } catch (e) {
+      // If refresh fails, clear the auth store
+      pb.authStore.clear();
+    }
+  }
+
   runApp(const MyApp());
 }
 

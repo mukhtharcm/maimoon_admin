@@ -130,18 +130,13 @@ class _HomePageState extends State<HomePage> {
         onRefresh: () async => _refreshData(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Content Overview',
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
               Wrap(
-                spacing: 24,
-                runSpacing: 24,
+                spacing: 16,
+                runSpacing: 16,
                 children: [
                   SizedBox(
                     width: isSmallScreen ? double.infinity : 300,
@@ -249,7 +244,7 @@ class _HomePageState extends State<HomePage> {
                 'Quick Actions',
                 style: theme.textTheme.headlineSmall,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 16,
                 runSpacing: 16,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:maimoon_admin/core/di/service_locator.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
 import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
 import 'package:maimoon_admin/features/tags/presentation/pages/tags_page.dart';
+import 'package:pocketbase/pocketbase.dart';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
@@ -12,6 +14,8 @@ import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
+import 'package:maimoon_admin/features/auth/models/user.dart';
+import 'package:maimoon_admin/features/auth/repositories/users_repository.dart';
 
 class PostFormPage extends StatefulWidget {
   final Post? post;
@@ -38,6 +42,7 @@ class _PostFormPageState extends State<PostFormPage> {
   File? selectedCoverImage;
   bool _isSaving = false;
   List<String> selectedTagIds = [];
+  String? selectedAuthorId;
 
   @override
   void initState() {
@@ -67,6 +72,9 @@ class _PostFormPageState extends State<PostFormPage> {
     context.read<SeriesBloc>().add(LoadAllSeries());
     selectedTagIds = widget.post?.tagIds ?? [];
     context.read<TagsBloc>().add(LoadTags());
+    selectedAuthorId = widget.post?.authorId?.isNotEmpty == true
+        ? widget.post?.authorId
+        : getIt<PocketBase>().authStore.model?.id;
   }
 
   @override
@@ -387,6 +395,55 @@ class _PostFormPageState extends State<PostFormPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<User>>(
+                  future: getIt<UsersRepository>().getUsers(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const LinearProgressIndicator();
+                    }
+
+                    if (snapshot.hasError) {
+                      return Text(
+                        'Error loading authors',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+
+                    final users = snapshot.data ?? [];
+
+                    return DropdownButtonFormField<String>(
+                      value: selectedAuthorId,
+                      decoration: const InputDecoration(
+                        labelText: 'Author',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Select Author'),
+                        ),
+                        ...users.map(
+                          (user) => DropdownMenuItem(
+                            value: user.id,
+                            child: Text(user.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => selectedAuthorId = value);
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select an author';
+                        }
+                        return null;
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -441,6 +498,7 @@ class _PostFormPageState extends State<PostFormPage> {
           coverFilename: widget.post?.coverFilename,
           coverUrl: widget.post?.coverUrl,
           imageUrls: additionalImagePaths,
+          authorId: selectedAuthorId,
           tagIds: selectedTagIds,
         );
 
