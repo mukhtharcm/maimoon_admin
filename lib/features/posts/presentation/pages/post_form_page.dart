@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
 import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
+import 'package:maimoon_admin/features/tags/presentation/pages/tags_page.dart';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
@@ -10,6 +11,7 @@ import 'package:maimoon_admin/features/posts/models/post.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
+import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
 
 class PostFormPage extends StatefulWidget {
   final Post? post;
@@ -35,6 +37,7 @@ class _PostFormPageState extends State<PostFormPage> {
   final _formKey = GlobalKey<FormState>();
   File? selectedCoverImage;
   bool _isSaving = false;
+  List<String> selectedTagIds = [];
 
   @override
   void initState() {
@@ -62,6 +65,8 @@ class _PostFormPageState extends State<PostFormPage> {
     selectedSeriesId = widget.post?.seriesId ?? widget.initialSeriesId;
     selectedDate = widget.post?.date ?? DateTime.now();
     context.read<SeriesBloc>().add(LoadAllSeries());
+    selectedTagIds = widget.post?.tagIds ?? [];
+    context.read<TagsBloc>().add(LoadTags());
   }
 
   @override
@@ -306,6 +311,82 @@ class _PostFormPageState extends State<PostFormPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tags',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        BlocBuilder<TagsBloc, TagsState>(
+                          builder: (context, state) {
+                            if (state is TagsLoaded) {
+                              if (state.tags.isEmpty) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'No tags available',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const TagsPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Create Tags'),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: state.tags.map((tag) {
+                                  final isSelected =
+                                      selectedTagIds.contains(tag.id);
+                                  return FilterChip(
+                                    label: Text(tag.name),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          selectedTagIds.add(tag.id);
+                                        } else {
+                                          selectedTagIds.remove(tag.id);
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              );
+                            }
+                            return const LinearProgressIndicator();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -360,6 +441,7 @@ class _PostFormPageState extends State<PostFormPage> {
           coverFilename: widget.post?.coverFilename,
           coverUrl: widget.post?.coverUrl,
           imageUrls: additionalImagePaths,
+          tagIds: selectedTagIds,
         );
 
         if (widget.post == null) {

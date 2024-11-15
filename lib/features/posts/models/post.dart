@@ -11,6 +11,8 @@ class Post {
   final String? coverFilename;
   final List<String> imageUrls;
   final int order;
+  final String? authorId;
+  final List<String> tagIds;
 
   Post({
     required this.id,
@@ -22,6 +24,8 @@ class Post {
     this.coverFilename,
     this.imageUrls = const [],
     this.order = 0,
+    this.authorId,
+    this.tagIds = const [],
   });
 
   factory Post.fromRecord(RecordModel record) {
@@ -44,6 +48,8 @@ class Post {
           .map((filename) => pb.files.getUrl(record, filename).toString())
           .toList(),
       order: record.data['order'] ?? 0,
+      authorId: record.data['author'],
+      tagIds: List<String>.from(record.data['tags'] ?? []),
     );
   }
 
@@ -56,6 +62,8 @@ class Post {
       'cover': coverFilename,
       'images': imageUrls,
       'order': order,
+      'author': authorId,
+      'tags': tagIds,
     };
   }
 }

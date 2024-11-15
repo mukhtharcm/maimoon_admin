@@ -7,6 +7,7 @@ import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 import 'package:maimoon_admin/features/home/presentation/pages/home_page.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
+import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<AuthBloc>()),
         BlocProvider(create: (_) => getIt<PostsBloc>()),
         BlocProvider(create: (_) => getIt<SeriesBloc>()),
+        BlocProvider(create: (_) => getIt<TagsBloc>()),
       ],
       child: MaterialApp(
         title: 'Maimoon Admin',

@@ -7,6 +7,7 @@ import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart'
 import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
+import 'package:maimoon_admin/features/tags/presentation/pages/tags_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -94,6 +95,17 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const SeriesPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_offer),
+              title: const Text('Tags'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TagsPage()),
                 );
               },
             ),

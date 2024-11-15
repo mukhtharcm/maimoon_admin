@@ -7,6 +7,8 @@ import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/auth/repositories/auth_repository.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
+import 'package:maimoon_admin/features/tags/repositories/tags_repository.dart';
+import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -21,7 +23,7 @@ Future<void> setupServiceLocator() async {
   );
 
   const prodUrl = 'https://maimoon.pockethost.io';
-  const devUrl = 'http://localhost:8090';
+  const devUrl = 'http://192.168.103.153:8090';
   // Core services
   getIt.registerLazySingleton<PocketBase>(
     () => PocketBase(kDebugMode ? devUrl : prodUrl, authStore: authStore),
@@ -39,6 +41,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<SeriesRepository>(
     () => SeriesRepository(),
   );
+  getIt.registerLazySingleton<TagsRepository>(
+    () => TagsRepository(),
+  );
 
   // BLoCs
   getIt.registerFactory<AuthBloc>(
@@ -49,5 +54,8 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerFactory<SeriesBloc>(
     () => SeriesBloc(repository: getIt<SeriesRepository>()),
+  );
+  getIt.registerFactory<TagsBloc>(
+    () => TagsBloc(repository: getIt<TagsRepository>()),
   );
 }
