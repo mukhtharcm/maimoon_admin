@@ -10,6 +10,8 @@ import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 import 'package:maimoon_admin/features/tags/repositories/tags_repository.dart';
 import 'package:maimoon_admin/features/tags/bloc/tags_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:maimoon_admin/features/books/repositories/books_repository.dart';
+import 'package:maimoon_admin/features/books/bloc/books_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -44,6 +46,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<TagsRepository>(
     () => TagsRepository(),
   );
+  getIt.registerLazySingleton<BooksRepository>(
+    () => BooksRepository(),
+  );
 
   // BLoCs
   getIt.registerFactory<AuthBloc>(
@@ -57,5 +62,8 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerFactory<TagsBloc>(
     () => TagsBloc(repository: getIt<TagsRepository>()),
+  );
+  getIt.registerFactory<BooksBloc>(
+    () => BooksBloc(repository: getIt<BooksRepository>()),
   );
 }

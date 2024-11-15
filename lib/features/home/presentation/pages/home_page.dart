@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
-import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
+import 'package:maimoon_admin/features/books/bloc/books_bloc.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
 import 'package:maimoon_admin/features/series/presentation/pages/series_page.dart';
+import 'package:maimoon_admin/features/books/presentation/pages/books_page.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
-import 'package:maimoon_admin/features/tags/presentation/pages/tags_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,11 +26,14 @@ class _HomePageState extends State<HomePage> {
   void _refreshData() {
     context.read<PostsBloc>().add(LoadPosts());
     context.read<SeriesBloc>().add(LoadAllSeries());
+    context.read<BooksBloc>().add(LoadBooks());
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    final isSmallScreen = width < 900;
 
     return Scaffold(
       appBar: AppBar(
@@ -72,9 +75,7 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: const Icon(Icons.dashboard),
               title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.article),
@@ -99,13 +100,13 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.local_offer),
-              title: const Text('Tags'),
+              leading: const Icon(Icons.book),
+              title: const Text('Books'),
               onTap: () {
-                Navigator.pop(context); // Close drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const TagsPage()),
+                  MaterialPageRoute(builder: (_) => const BooksPage()),
                 );
               },
             ),
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
-                Navigator.pop(context); // Close drawer
+                Navigator.pop(context);
                 context.read<AuthBloc>().add(LogoutEvent());
                 Navigator.pushReplacement(
                   context,
@@ -129,21 +130,26 @@ class _HomePageState extends State<HomePage> {
         onRefresh: () async => _refreshData(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Overview',
+                'Content Overview',
                 style: theme.textTheme.headlineSmall,
               ),
               const SizedBox(height: 24),
-              Row(
+              Wrap(
+                spacing: 24,
+                runSpacing: 24,
                 children: [
-                  Expanded(
+                  SizedBox(
+                    width: isSmallScreen ? double.infinity : 300,
                     child: _StatCard(
-                      title: 'Total Posts',
-                      icon: Icons.article,
+                      title: 'Posts',
+                      subtitle: 'Total number of posts',
+                      icon: Icons.article_rounded,
+                      iconColor: theme.colorScheme.primary,
                       value: BlocBuilder<PostsBloc, PostsState>(
                         buildWhen: (previous, current) =>
                             current is PostsLoaded || current is PostsLoading,
@@ -151,7 +157,10 @@ class _HomePageState extends State<HomePage> {
                           if (state is PostsLoaded) {
                             return Text(
                               state.posts.length.toString(),
-                              style: theme.textTheme.headlineMedium,
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             );
                           }
                           return const SizedBox(
@@ -167,11 +176,13 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
+                  SizedBox(
+                    width: isSmallScreen ? double.infinity : 300,
                     child: _StatCard(
-                      title: 'Total Series',
-                      icon: Icons.library_books,
+                      title: 'Series',
+                      subtitle: 'Total number of series',
+                      icon: Icons.library_books_rounded,
+                      iconColor: theme.colorScheme.secondary,
                       value: BlocBuilder<SeriesBloc, SeriesState>(
                         buildWhen: (previous, current) =>
                             current is SeriesLoaded || current is SeriesLoading,
@@ -179,7 +190,10 @@ class _HomePageState extends State<HomePage> {
                           if (state is SeriesLoaded) {
                             return Text(
                               state.seriesList.length.toString(),
-                              style: theme.textTheme.headlineMedium,
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color: theme.colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             );
                           }
                           return const SizedBox(
@@ -195,6 +209,39 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    width: isSmallScreen ? double.infinity : 300,
+                    child: _StatCard(
+                      title: 'Books',
+                      subtitle: 'Total number of books',
+                      icon: Icons.book_rounded,
+                      iconColor: theme.colorScheme.tertiary,
+                      value: BlocBuilder<BooksBloc, BooksState>(
+                        buildWhen: (previous, current) =>
+                            current is BooksLoaded || current is BooksLoading,
+                        builder: (context, state) {
+                          if (state is BooksLoaded) {
+                            return Text(
+                              state.books.length.toString(),
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color: theme.colorScheme.tertiary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          }
+                          return const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BooksPage()),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
@@ -202,28 +249,39 @@ class _HomePageState extends State<HomePage> {
                 'Quick Actions',
                 style: theme.textTheme.headlineSmall,
               ),
-              const SizedBox(height: 16),
-              Row(
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
                 children: [
-                  Expanded(
-                    child: _ActionButton(
-                      title: 'New Post',
-                      icon: Icons.add_circle_outline,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const PostFormPage()),
-                      ),
+                  _ActionButton(
+                    title: 'New Post',
+                    subtitle: 'Create a new blog post',
+                    icon: Icons.post_add_rounded,
+                    color: theme.colorScheme.primary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PostsPage()),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _ActionButton(
-                      title: 'New Series',
-                      icon: Icons.create_new_folder_outlined,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SeriesPage()),
-                      ),
+                  _ActionButton(
+                    title: 'New Series',
+                    subtitle: 'Create a new series',
+                    icon: Icons.create_new_folder_rounded,
+                    color: theme.colorScheme.secondary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SeriesPage()),
+                    ),
+                  ),
+                  _ActionButton(
+                    title: 'New Book',
+                    subtitle: 'Add a new book',
+                    icon: Icons.book_rounded,
+                    color: theme.colorScheme.tertiary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BooksPage()),
                     ),
                   ),
                 ],
@@ -238,13 +296,17 @@ class _HomePageState extends State<HomePage> {
 
 class _StatCard extends StatelessWidget {
   final String title;
+  final String subtitle;
   final IconData icon;
+  final Color iconColor;
   final Widget value;
   final VoidCallback onTap;
 
   const _StatCard({
     required this.title,
+    required this.subtitle,
     required this.icon,
+    required this.iconColor,
     required this.value,
     required this.onTap,
   });
@@ -254,22 +316,55 @@ class _StatCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
+      elevation: 0,
+      color: theme.colorScheme.surface,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(icon, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(title, style: theme.textTheme.titleMedium),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: iconColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: iconColor),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Center(child: value),
             ],
           ),
@@ -281,30 +376,71 @@ class _StatCard extends StatelessWidget {
 
 class _ActionButton extends StatelessWidget {
   final String title;
+  final String subtitle;
   final IconData icon;
+  final Color color;
   final VoidCallback onTap;
 
   const _ActionButton({
     required this.title,
+    required this.subtitle,
     required this.icon,
+    required this.color,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon),
-              const SizedBox(width: 8),
-              Text(title),
-            ],
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      width: 280,
+      child: Card(
+        elevation: 0,
+        color: theme.colorScheme.surface,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
