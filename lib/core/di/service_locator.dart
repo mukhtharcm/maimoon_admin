@@ -25,7 +25,7 @@ Future<void> setupServiceLocator() async {
     initial: authData,
   );
 
-  const prodUrl = 'https://maimoon.pockethost.io';
+  const prodUrl = 'https://mymoon.pockethost.io';
   const devUrl = 'http://192.168.103.153:8090';
   // Core services
   getIt.registerLazySingleton<PocketBase>(
