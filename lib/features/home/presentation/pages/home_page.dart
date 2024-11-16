@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maimoon_admin/features/posts/bloc/posts_bloc.dart';
+import 'package:maimoon_admin/features/posts/presentation/pages/post_form_page.dart';
 import 'package:maimoon_admin/features/series/bloc/series_bloc.dart';
 import 'package:maimoon_admin/features/books/bloc/books_bloc.dart';
 import 'package:maimoon_admin/features/posts/presentation/pages/posts_page.dart';
@@ -8,6 +9,8 @@ import 'package:maimoon_admin/features/series/presentation/pages/series_page.dar
 import 'package:maimoon_admin/features/books/presentation/pages/books_page.dart';
 import 'package:maimoon_admin/features/auth/bloc/auth_bloc.dart';
 import 'package:maimoon_admin/features/auth/presentation/pages/login_page.dart';
+import 'package:maimoon_admin/features/series/presentation/pages/series_form_page.dart';
+import 'package:maimoon_admin/features/books/presentation/pages/book_form_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -57,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'Maimoon Admin',
+                    'Mymoon Admin',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       color: theme.colorScheme.onPrimary,
                     ),
@@ -256,7 +259,9 @@ class _HomePageState extends State<HomePage> {
                     color: theme.colorScheme.primary,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const PostsPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const PostFormPage(),
+                      ),
                     ),
                   ),
                   _ActionButton(
@@ -266,7 +271,9 @@ class _HomePageState extends State<HomePage> {
                     color: theme.colorScheme.secondary,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SeriesPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const SeriesFormPage(),
+                      ),
                     ),
                   ),
                   _ActionButton(
@@ -276,7 +283,9 @@ class _HomePageState extends State<HomePage> {
                     color: theme.colorScheme.tertiary,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const BooksPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const BookFormPage(),
+                      ),
                     ),
                   ),
                 ],

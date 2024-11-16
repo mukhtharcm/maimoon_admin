@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<TagsBloc>()),
       ],
       child: MaterialApp(
-        title: 'Maimoon Admin',
+        title: 'Mymoon Admin',
         home: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is Authenticated) {
